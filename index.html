@@ -1,23 +1,77 @@
 <!DOCTYPE html>
-	<html>
-		<head>
-			<title>Remember The Milk Scheduler</title>
-			<meta name="author" content="Dale Lane">
-			<meta name="description" content="A tool for scheduling tasks stored in Remember The Milk">
-			<meta name="keywords" content="RTM, Remember The Milk, schedule, scheduler, calendar, drag, drag and drop">
+    <html>
+        <head>
+            <title>Remember The Milk Scheduler</title>
+            <meta name="author" content="Dale Lane">
+            <meta name="description" content="A tool for scheduling tasks stored in Remember The Milk">
+            <meta name="keywords" content="RTM, Remember The Milk, schedule, scheduler, calendar, drag, drag and drop">
 
-			<!-- FullCalendar : http://arshaw.com/fullcalendar/ -->
-			<link href="./fullcalendar-1.6.4/fullcalendar/fullcalendar.css" rel="stylesheet" />
-			<link href="./fullcalendar-1.6.4/fullcalendar/fullcalendar.print.css" rel="stylesheet" media="print" />
-			<script src="./fullcalendar-1.6.4/lib/jquery.min.js"></script>
-			<script src="./jquery/jquery-ui-1.10.3.custom.min.js"></script>
-			<script src="./fullcalendar-1.6.4/fullcalendar/fullcalendar.min.js"></script>
-			<link href="./jquery/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
-			<!-- rtm-js : https://github.com/michaelday/rtm-js -->
-			<script src="./rtm-js-master/md5.js"></script>
-			<script src="./rtm-js-master/rtm.js"></script>
-		</head>
-	<body>
-		Something interesting might go here. Have another look later.
-	</body>
+            <!-- FullCalendar : http://arshaw.com/fullcalendar/ -->
+            <link href="./fullcalendar-1.6.4/fullcalendar/fullcalendar.css" rel="stylesheet" />
+            <link href="./fullcalendar-1.6.4/fullcalendar/fullcalendar.print.css" rel="stylesheet" media="print" />
+            <script src="./fullcalendar-1.6.4/lib/jquery.min.js"></script>
+            <script src="./jquery/jquery-ui-1.10.3.custom.min.js"></script>
+            <script src="./fullcalendar-1.6.4/fullcalendar/fullcalendar.min.js"></script>
+            <link href="./jquery/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
+            <!-- rtm-js : https://github.com/michaelday/rtm-js -->
+            <script src="./rtm-js-master/md5.js"></script>
+            <script src="./rtm-js-master/rtm.js"></script>
+            <!-- logic for rtmsched -->
+            <script src="./rtmsched.js"></script>
+            <link href="./rtmsched.css" rel="stylesheet"/>
+        </head>
+    <body>
+        <!-- the overall page -->
+        <div id="rtmschedcontainer">
+
+            <!-- left-hand sidebar - a list of RTM tasks that don't have a due date -->
+            <div id="unscheduledtasks">
+                <!-- login button - only visible if not already logged in -->
+                <button id="rtmauth" disabled="disabled">Login with Remember The Milk</button>
+
+                <!-- search box - filtering only applied to unscheduled tasks list and done server-side using RTM API -->
+                <form id="rtmquery">
+                    <input id="rtmquerytext" type="text" placeholder="Search for unscheduled tasks">
+                    <a id="rtmqueryhelp" href="http://www.rememberthemilk.com/help/?ctx=basics.search.advanced" target="_blank">?</a>
+                </form>
+
+                <!-- used to show status of RTM API calls -->
+                <img id="rtmloading" src="loading.gif"/>
+                <div id="rtmerror"></div>
+            </div>
+
+            <!-- right-hand main body - a calendar showing RTM tasks with a due date -->
+            <div id="rtmcalendar"></div>
+            <div style="clear:both"></div>
+
+            <!-- footer with the obligatory tiny links -->
+            <div id="rtmschedfooter">
+                <a href="#" id="rtmschedabout">About this tool</a> | 
+                <a href="#" id="rtmlogout">Logout</a> | 
+                <a href="http://dalelane.co.uk/">Dale Lane</a>
+            </div>
+        </div>
+
+        <!-- dialog shown if you click on the "About this tool" link -->
+        <div id="aboutdialog" title="About this tool">
+            <div><strong>
+                Schedule <a href="http://www.rememberthemilk.com/">Remember The Milk</a> tasks by dragging them 
+                onto a calendar
+            </strong></div>
+            <div>
+                This tool was created as a quick hack to plug a gap in my Remember The Milk workflow - planning 
+                when to do tasks. Entering a new due date one task at a time is a little long-winded, so I thought
+                that a calendar was a better way to quickly plan and triage. 
+            </div>
+            <div>
+                Written in a couple of hours thanks to the <a href="https://github.com/michaelday/rtm-js">rtm-js 
+                Javascript library</a> and the <a href="http://arshaw.com/fullcalendar/">FullCalendar jQuery 
+                plugin</a>, and powered by the <a href="http://www.rememberthemilk.com/services/api/">Remember The 
+                Milk API</a>.
+            </div>
+            <div>
+                -- <a href="http://dalelane.co.uk/">Dale Lane</a>
+            </div>
+        </div>
+    </body>
 </html>
