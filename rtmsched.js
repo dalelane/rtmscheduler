@@ -9,8 +9,9 @@
 //         4-Jan-2014
 //
 //     Uses:
-//        FullCalendar : http://arshaw.com/fullcalendar/ 
-//        rtm-js       : https://github.com/michaelday/rtm-js 
+//        FullCalendar           : http://arshaw.com/fullcalendar/ 
+//        rtm-js                 : https://github.com/michaelday/rtm-js 
+//        jQuery UI Touch Punch  : http://touchpunch.furf.com/
 //
 
 //
