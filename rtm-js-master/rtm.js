@@ -50,6 +50,8 @@
 		this.authUrl = 'https://www.rememberthemilk.com/services/auth/';
 		this.baseUrl = 'https://api.rememberthemilk.com/services/rest/';
 
+		window.rtmLastCallback = new Date().getTime();
+
 		this.isWinJS = (typeof WinJS !== 'undefined');
 		this.isNode = (typeof module !== 'undefined' && module.exports);
 		this.isFirefoxOS = (typeof MozActivity !== 'undefined'); //Best way to do it right now (also working on Fifrefox for Android, and temporary as everything is built to eventually be a standard)
@@ -199,7 +201,7 @@
 			params.method = method;
 
 			if (!this.isWinJS && !this.isNode && !this.isFirefoxOS) {
-				callbackName = 'RememberTheMilk' + new Date().getTime();
+				callbackName = 'RememberTheMilk' + (window.rtmLastCallback++).toString();
 				params.callback = callbackName;
 			}
 
@@ -245,6 +247,7 @@
 				xhr.send();
 			} else {
 				window[callbackName] = function (resp) {
+
 					callback.call(this, resp);
 					window[callbackName] = null;
 				}
