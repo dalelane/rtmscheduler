@@ -1,0 +1,103 @@
+body {
+	margin-top: 40px;
+	text-align: center;
+	font-size: 14px;
+	font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+	}
+	
+#rtmschedcontainer {
+	margin: 10px;
+	}
+	
+#unscheduledtasks {
+	float: left;
+	padding: 10px;
+	border: 1px solid #ccc;
+	background: #eee;
+	text-align: left;
+	width: 17%;
+	}
+	
+#unscheduledtasks h4 {
+	font-size: 16px;
+	margin-top: 0;
+	padding-top: 1em;
+	}
+	
+.unplannedtask { 
+	margin: 10px 0;
+	padding: 2px 4px;
+	background: #3366CC;
+	color: #fff;
+	font-size: .85em;
+	cursor: pointer;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	width: 95%;
+	}
+	
+#unscheduledtasks p {
+	margin: 1.5em 0;
+	font-size: 11px;
+	color: #666;
+	}
+	
+#unscheduledtasks p input {
+	margin: 0;
+	vertical-align: middle;
+	}
+
+#rtmcalendar {
+	float: right;
+	width: 80%;
+}
+
+button#rtmauth {
+	display: block;
+	border: 1px solid #808080;
+	padding: 10px;
+	width: 100%;
+}
+
+#rtmloading {
+	display: none; 
+	padding-top: 5px;
+}
+
+#rtmerror {
+	display: none; 
+	padding: 5px; 
+	color: red;
+}
+
+#rtmquery {
+	display: none;	
+}
+
+#rtmquerytext {
+	width: 85%;
+}
+
+#rtmqueryhelp {
+    font-size: 11px;
+    margin-left: 7px;
+    text-decoration: none;
+}
+
+#rtmschedfooter {
+	text-align: left;
+	font-size: 11px;
+	margin-top: 10px;
+}
+
+#aboutdialog {
+	display: none;
+	text-align: left;
+	width: 500px;
+}
+
+#aboutdialog div {
+	margin: 10px;
+	font-size: 12px;
+}
