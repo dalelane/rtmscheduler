@@ -8,14 +8,42 @@ body {
 #rtmschedcontainer {
 	margin: 10px;
 	}
+
+.sidebar {
+	float: left;
+	width: 19%;
+	border: 0;
+	margin: 0;
+	padding: 0;
+	}
+
+.googlecalsidebar {
+	margin-top: 6px;
+	padding: 0 10px 10px;
+	border: 1px solid #ccc;
+	background: #99CC99;
+	text-align: left;
+	}	
+
+.googlecalsidebar .heading {
+	margin: 10px 0 6px;
+	font-size: 11px;
+	font-weight: bold;
+	}	
+
+.settings {
+	font-size: 10px;
+	}		
+
+#googlecalsettings {
+	display : none;
+	}	
 	
 #unscheduledtasks {
-	float: left;
 	padding: 10px;
 	border: 1px solid #ccc;
 	background: #eee;
 	text-align: left;
-	width: 17%;
 	}
 	
 #unscheduledtasks h4 {
@@ -57,6 +85,10 @@ body {
 	overflow: visible;
 }
 
+#rtmcalendar .gcal-event {
+	background-color: #228200;
+}
+
 button#rtmauth {
 	display: block;
 	border: 1px solid #808080;
@@ -93,6 +125,21 @@ button#rtmauth {
 	text-align: left;
 	font-size: 11px;
 	margin-top: 10px;
+}
+
+#googlecalendardialog {
+	display: none;
+	text-align: left;
+	width: 500px;
+}
+
+#googlecalendardialog div {
+	margin: 10px;
+	font-size: 12px;
+}
+
+#googlecalendarxml {
+	width: 95%;
 }
 
 #aboutdialog {

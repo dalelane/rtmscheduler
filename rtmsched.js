@@ -288,7 +288,7 @@ $(document).ready(function() {
     }
   });
 
-  $('#rtmcalendar').fullCalendar({
+  var calendarParameters = {
     header: {
       left: 'prev,next today',
       center: 'title',
@@ -319,14 +319,66 @@ $(document).ready(function() {
     eventDragStart: function( event, jsEvent, ui, view ) {
       _taskBeingDragged = { event : event, jsEvent : jsEvent };
     }
+  };
+  var gcalxml = getCookie("gcalxml");
+  if (gcalxml){
+    calendarParameters.events = { url : gcalxml, className : 'gcal-event' };
+    $("#googlecalsettings").show();
+    $("#googlecalendartogglebtn").prop("checked", true);    
+  }
+  $('#rtmcalendar').fullCalendar(calendarParameters);
+
+
+  //
+  // Google Calendar support
+  // 
+
+  $( "#googlecalendarbutton" ).button().click(function(event){
+    // remove any existing Google Calendar entries
+    $('#rtmcalendar').fullCalendar("removeEvents", function(eventObj){
+        return eventObj.source.dataType === "gcal";
+    });
+
+    // store the Google Calendar URL in a cookie
+    var gcalxml = $("#googlecalendarxml").val();
+    setCookie("gcalxml", gcalxml);
+
+    // add the Google Calendar source to the calendar
+    if (gcalxml){
+      $('#rtmcalendar').fullCalendar("addEventSource", { url : gcalxml, className : 'gcal-event' });
+      $("#googlecalsettings").show();
+      $("#googlecalendartogglebtn").prop("checked", true);
+    }
+    else {
+      $("#googlecalsettings").hide();
+    }
+
+    // close the dialog
+    $("#googlecalendardialog").dialog("close");
+  });
+  $("#googlecalendartogglebtn").change(function(eventObj){
+    if ($("#googlecalendartogglebtn").prop("checked")){
+      $('#rtmcalendar').fullCalendar("addEventSource", { url : getCookie("gcalxml"), className : 'gcal-event' });
+    }
+    else {
+      $('#rtmcalendar').fullCalendar("removeEvents", function(eventObj){
+        return eventObj.source.dataType === "gcal";
+      });
+    }
   });
 
+
   // 
-  // Display 'About' info
+  // Display dialogs
   //
   $("a#rtmschedabout").click(function(e) {
       e.preventDefault();
       $("#aboutdialog").dialog({ width : 700 });
+  });
+  $("a#googlecalendar").click(function(e) {
+      e.preventDefault();
+      $("#googlecalendarxml").val(getCookie("gcalxml"));
+      $("#googlecalendardialog").dialog({ width : 700 });
   });
 
   // 
@@ -336,6 +388,7 @@ $(document).ready(function() {
       e.preventDefault();
       deleteCookie("rtmfrob");
       deleteCookie("rtmauthtoken");
+      deleteCookie("gcalxml");
       window.location = window.location.pathname;
   });
 
