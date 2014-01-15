@@ -12,6 +12,7 @@
             <script src="./fullcalendar-1.6.4/lib/jquery.min.js"></script>
             <script src="./jquery/jquery-ui-1.10.3.custom.min.js"></script>
             <script src="./fullcalendar-1.6.4/fullcalendar/fullcalendar.min.js"></script>
+            <script src='./fullcalendar-1.6.4/fullcalendar/gcal.js'></script>
             <link href="./jquery/jquery-ui-1.10.3.custom.min.css" rel="stylesheet" />
             <script src="./jquery/jquery.ui.touch-punch.min.js"></script>
             <!-- rtm-js : https://github.com/michaelday/rtm-js -->
@@ -26,19 +27,31 @@
         <div id="rtmschedcontainer">
 
             <!-- left-hand sidebar - a list of RTM tasks that don't have a due date -->
-            <div id="unscheduledtasks">
-                <!-- login button - only visible if not already logged in -->
-                <button id="rtmauth" disabled="disabled">Login with Remember The Milk</button>
+            <div class="sidebar">
+                <div id="unscheduledtasks">
+                    <!-- login button - only visible if not already logged in -->
+                    <button id="rtmauth" disabled="disabled">Login with Remember The Milk</button>
 
-                <!-- search box - filtering only applied to unscheduled tasks list and done server-side using RTM API -->
-                <form id="rtmquery">
-                    <input id="rtmquerytext" type="text" placeholder="Search for unscheduled tasks">
-                    <a id="rtmqueryhelp" href="http://www.rememberthemilk.com/help/?ctx=basics.search.advanced" target="_blank">?</a>
-                </form>
+                    <!-- search box - filtering only applied to unscheduled tasks list and done server-side using RTM API -->
+                    <form id="rtmquery">
+                        <input id="rtmquerytext" type="text" placeholder="Search for unscheduled tasks">
+                        <a id="rtmqueryhelp" href="http://www.rememberthemilk.com/help/?ctx=basics.search.advanced" target="_blank">?</a>
+                    </form>
 
-                <!-- used to show status of RTM API calls -->
-                <img id="rtmloading" src="loading.gif"/>
-                <div id="rtmerror"></div>
+                    <!-- used to show status of RTM API calls -->
+                    <img id="rtmloading" src="loading.gif"/>
+                    <div id="rtmerror"></div>
+                </div>
+                <div class="googlecalsidebar">
+                    <div class="heading">Google Calendar</div>
+                    <div id="googlecalsettings" class="settings">
+                        <input type="checkbox" id="googlecalendartogglebtn"/> Show / Hide
+                    </div>
+                    <div style="float: right">
+                        <a class="settings" href="#" id="googlecalendar">Settings</a>
+                    </div>
+                    <div style="clear: both"></div>
+                </div>
             </div>
 
             <!-- right-hand main body - a calendar showing RTM tasks with a due date -->
@@ -81,6 +94,24 @@
             </div>
             <div>
                 -- <a href="http://dalelane.co.uk/">Dale Lane</a>
+            </div>
+        </div>
+
+        <!-- dialog shown if you click on the "Google Calendar" link -->
+        <div id="googlecalendardialog" title="Show Google Calendar events">
+            <div><strong>
+                Display a read-only view of your Google Calendar with your Remember The Milk tasks
+            </strong></div>
+            <div>
+                Your Google Calendar Private Address (XML) 
+                <a href="https://support.google.com/calendar/answer/37106" target="_blank">?</a> 
+                :               
+            </div>
+            <div>
+                <input id="googlecalendarxml" type="text" placeholder="URL of the XML feed for your Google Calendar">
+            </div>
+            <div>
+                <button id="googlecalendarbutton">OK</button>
             </div>
         </div>
     </body>
