@@ -109,7 +109,7 @@ function rescheduleTask (listid, taskseriesid, taskid, due, allDay, revertFunc){
     list_id       : listid, 
     taskseries_id : taskseriesid, 
     task_id       : taskid, 
-    due           : due.toISOString(),
+    due           : due ? due.toISOString() : '',
     has_due_time  : !(allDay)
   }, 
   function(resp){
@@ -257,9 +257,37 @@ $(document).ready(function() {
     });
   }
 
+
 //
 // Calendar API functions
 //
+
+  var _taskBeingDragged = null;
+
+  $("#unscheduledtasks").droppable({
+    drop: function( event, ui ) {
+      // handle a task being dragged from the calendar to the unscheduled list
+      if (_taskBeingDragged){
+        // submit the update to RTM
+        rescheduleTask(_taskBeingDragged.event.rtmlistid, _taskBeingDragged.event.rtmtaskseriesid, _taskBeingDragged.event.rtmtaskid);
+
+        // remove the task from the calendar
+        $('#rtmcalendar').fullCalendar('removeEvents', function(filterEvent){
+          return _taskBeingDragged.event.rtmlistid === filterEvent.rtmlistid && 
+                 _taskBeingDragged.event.rtmtaskseriesid === filterEvent.rtmtaskseriesid && 
+                 _taskBeingDragged.event.rtmtaskid === filterEvent.rtmtaskid;
+        });
+        
+        // add the task to the unscheduled list
+        createUnscheduledTask(_taskBeingDragged.event.rtmlistid, {
+            id   : _taskBeingDragged.event.rtmtaskseriesid,
+            name : _taskBeingDragged.event.title,
+            task : { id : _taskBeingDragged.event.rtmtaskid }
+        });
+      }
+    }
+  });
+
   $('#rtmcalendar').fullCalendar({
     header: {
       left: 'prev,next today',
@@ -271,6 +299,7 @@ $(document).ready(function() {
     editable: true,    
     droppable: true, 
     drop: function(date, allDay) { 
+      // handle a task being dragged from the unscheduled list to the calendar
       var originalEventObject = $(this).data('eventObject');
       
       var copiedEventObject = $.extend({}, originalEventObject);
@@ -284,7 +313,11 @@ $(document).ready(function() {
       rescheduleTask(copiedEventObject.rtmlistid, copiedEventObject.rtmtaskseriesid, copiedEventObject.rtmtaskid, date, allDay);
     },
     eventDrop: function(event, dayDelta, minuteDelta, allDay, revertFunc) {
+      // handle a task being dragged from one part of the calendar to another
       rescheduleTask(event.rtmlistid, event.rtmtaskseriesid, event.rtmtaskid, event.start, allDay, revertFunc);
+    },
+    eventDragStart: function( event, jsEvent, ui, view ) {
+      _taskBeingDragged = { event : event, jsEvent : jsEvent };
     }
   });
 

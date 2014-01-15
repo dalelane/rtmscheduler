@@ -53,6 +53,10 @@ body {
 	width: 80%;
 }
 
+#rtmcalendar .fc-view {
+	overflow: visible;
+}
+
 button#rtmauth {
 	display: block;
 	border: 1px solid #808080;
