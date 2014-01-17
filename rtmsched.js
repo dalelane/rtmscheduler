@@ -160,11 +160,37 @@ function createRtmTimeline(){
   rtm.get('rtm.timelines.create', function(resp){
     if (resp.rsp.stat === "ok"){
       window.rtmtimeline = resp.rsp.timeline;
+
+      $('#newtaskdialoglink').show();
     }
     else {
       $('#rtmerror').show().html("RTM API error");
     }
   });
+}
+
+// Create a new RTM task
+function createTask(val){
+  rtm.get('rtm.tasks.add', { 
+    timeline : window.rtmtimeline, 
+    name     : val, 
+    parse    : 1 
+  }, 
+  function(resp){
+    if (resp.rsp.stat === "ok") {
+      $("#newtaskdialog").dialog("close");
+      $("#newtasktext").val("");
+      // createUnscheduledTask( resp.rsp.list.id, {
+      //   id   : resp.rsp.list.taskseries.id,
+      //   name : resp.rsp.list.taskseries.name,
+      //   task : { id : resp.rsp.list.taskseries.task.id }
+      // });
+      handleTaskData(resp.rsp.list.id, resp.rsp.list.taskseries, false);
+    }
+    else {
+      alert("RTM API error");
+    }
+  });    
 }
 
 //
@@ -256,6 +282,16 @@ $(document).ready(function() {
       }, 200);
     });
   }
+
+  $( "#newtaskbtn" ).button().click(function(event){
+    createTask($("#newtasktext").val());
+  });
+  $('#newtasktext').keyup(function(event){
+    if (event.keyCode === 13){
+      createTask($("#newtasktext").val());
+    }
+  });
+
 
 
 //
@@ -379,6 +415,11 @@ $(document).ready(function() {
       e.preventDefault();
       $("#googlecalendarxml").val(getCookie("gcalxml"));
       $("#googlecalendardialog").dialog({ width : 700 });
+  });
+  $("a#newtaskdialoglink").click(function(e) {
+      e.preventDefault();
+      $("#newtaskdialog").dialog({ width : 400 });
+      $("#newtasktext").focus();
   });
 
   // 

@@ -41,6 +41,9 @@
                     <!-- used to show status of RTM API calls -->
                     <img id="rtmloading" src="loading.gif"/>
                     <div id="rtmerror"></div>
+
+                    <!-- -->
+                    <a style="display: none" class="settings" href="#" id="newtaskdialoglink">Create new task</a>
                 </div>
                 <div class="googlecalsidebar">
                     <div class="heading">Google Calendar</div>
@@ -69,6 +72,12 @@
                     <em>This product uses the Remember The Milk API but is not endorsed or certified by Remember The Milk.</em>
                 </div>
             </div>            
+        </div>
+
+        <!-- dialog for creating new tasks -->
+        <div id="newtaskdialog" title="Create a new task">
+            <div><input id="newtasktext" type="text" placeholder="Enter new task"></div>
+            <button id="newtaskbtn">OK</button>
         </div>
 
         <!-- dialog shown if you click on the "About this tool" link -->
