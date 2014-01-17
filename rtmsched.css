@@ -148,6 +148,11 @@ button#rtmauth {
 	width: 95%;
 }
 
+#newtaskdialog {
+	display: none;
+	text-align: left;
+}
+
 #aboutdialog {
 	display: none;
 	text-align: left;
