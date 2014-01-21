@@ -179,6 +179,14 @@ button#rtmauth {
 	text-align: left;
 }
 
+#edittaskdialog {
+	display: none;
+}
+
+#completetaskbtn, #deletetaskbtn {
+	width: 45%;
+}
+
 #aboutdialog {
 	display: none;
 	text-align: left;

@@ -119,6 +119,55 @@ function rescheduleTask (listid, taskseriesid, taskid, due, allDay, revertFunc){
   });
 }
 
+// 
+// Submit a request to complete an RTM task
+//
+function completeTask (task, taskui){
+  editAndRemoveTask(task, taskui, 'rtm.tasks.complete');
+}
+
+// 
+// Submit a request to delete an RTM task
+//
+function deleteTask (task, taskui){
+  editAndRemoveTask(task, taskui, 'rtm.tasks.delete');
+}
+
+function editAndRemoveTask(task, taskui, apioperation) {
+  rtm.get(apioperation, {
+    timeline      : window.rtmtimeline, 
+    list_id       : task.rtmlistid, 
+    taskseries_id : task.rtmtaskseriesid, 
+    task_id       : task.rtmtaskid
+  },
+  function(resp){
+    if (resp.rsp.stat === "ok"){
+      if (taskui){
+        // remove the task from the unscheduled list
+        $(taskui).draggable('destroy');
+        $(taskui).remove();
+      }
+      else {
+        // remove the task from the calendar
+        $('#rtmcalendar').fullCalendar('removeEvents', function(filterEvent){
+          return task.rtmlistid === filterEvent.rtmlistid && 
+                 task.rtmtaskseriesid === filterEvent.rtmtaskseriesid && 
+                 task.rtmtaskid === filterEvent.rtmtaskid;
+        });
+      }
+
+      $("#edittaskdialog")
+        .dialog('close')
+        .removeData();
+    }
+    else {
+      alert(resp.rsp.err.msg);
+    }
+  });
+}
+
+
+
 //
 // Create an object to represent a scheduled RTM task and add to the calendar
 // 
@@ -155,6 +204,16 @@ function createUnscheduledTask(listid, taskitem){
     zIndex: 999,
     revert: true,      // will cause the event to go back to its
     revertDuration: 0  //  original position after the drag
+  }).click(function() {
+    var listDiv = $(this);
+    $("#edittaskdialog").dialog({ 
+      width : 400, 
+      height: 110, 
+      title: taskitem.name 
+    }).data({ 
+      calData: $(this).data().eventObject,
+      uiElement: listDiv
+    });
   });
 
   $('#unscheduledtasks').append(rtmListItemObj);
@@ -232,7 +291,7 @@ $(document).ready(function() {
       popup,
       token,
       frob,
-      permissions = 'write';
+      permissions = 'delete';
 
   window.rtm = new RememberTheMilk(api_key, api_secret, permissions);
 
@@ -296,6 +355,14 @@ $(document).ready(function() {
       createTask($("#newtasktext").val());
     }
   });
+  $('#completetaskbtn').button().click(function(event){
+    var data = $("#edittaskdialog").data();
+    completeTask(data.calData, data.uiElement);
+  });
+  $('#deletetaskbtn').button().click(function(event){
+    var data = $("#edittaskdialog").data();
+    deleteTask(data.calData, data.uiElement);
+  });  
 
 
 
@@ -361,6 +428,9 @@ $(document).ready(function() {
     },
     viewRender: function( view, element ) {
       setCookie("calview", $("#rtmcalendar").fullCalendar("getView").name);
+    },
+    eventClick: function(calEvent, jsEvent, view) {
+      $("#edittaskdialog").dialog({ width : 400, height: 110, title: calEvent.title }).data({ calData: calEvent });
     }
   };
   var gcalxml = getCookie("gcalxml");
