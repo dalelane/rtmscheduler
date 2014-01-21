@@ -2,19 +2,26 @@ body {
 	margin-top: 40px;
 	text-align: center;
 	font-size: 14px;
-	font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+	font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;]
+	height: 100%;
+	max-height: 100%;
+	overflow: hidden;
+	padding: 0;
+	margin: 0;
+	border: 0;
 	}
 	
-#rtmschedcontainer {
-	margin: 10px;
-	}
-
 .sidebar {
-	float: left;
 	width: 19%;
+	overflow-x: hidden;
+	overflow-y: auto;
+	left: 0;
+	top: 0;
+	bottom: 40px;
+	position: absolute;
 	border: 0;
 	margin: 0;
-	padding: 0;
+	padding: 3px;
 	}
 
 .googlecalsidebar {
@@ -62,7 +69,9 @@ body {
 	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
-	width: 95%;
+	max-width: 350px;
+	min-width: 100px;
+	text-align: left;
 	}
 	
 #unscheduledtasks p {
@@ -77,8 +86,16 @@ body {
 	}
 
 #rtmcalendar {
-	float: right;
+	left: 19%;
+	top: 0;
 	width: 80%;
+	bottom: 40px;
+	position: absolute;
+	overflow-y: auto;
+	border: 0;
+	margin: 0;
+	padding-left: 9px;
+	padding-top: 3px;
 }
 
 #newtasktext {
@@ -130,7 +147,16 @@ button#rtmauth {
 #rtmschedfooter {
 	text-align: left;
 	font-size: 11px;
-	margin-top: 10px;
+	left: 0;
+	position: absolute;
+	height: 35px;
+	bottom: 0;
+	width: 100%;
+	padding-left: 10px;
+	padding-right: 10px;
+	margin-top: 5px;
+	background-color: white;
+	z-index: 100;
 }
 
 #googlecalendardialog {
