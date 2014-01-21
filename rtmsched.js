@@ -147,6 +147,11 @@ function createUnscheduledTask(listid, taskitem){
           rtmtaskseriesid : taskitem.id,
           rtmlistid       : listid  } }
   }).draggable({
+    start:  function() { $(this).toggle(); }, 
+    stop: function() { $(this).toggle(); }, 
+    appendTo: "body",
+    helper: "clone", 
+    scroll: false, 
     zIndex: 999,
     revert: true,      // will cause the event to go back to its
     revertDuration: 0  //  original position after the drag
@@ -328,9 +333,8 @@ $(document).ready(function() {
     header: {
       left: 'prev,next today',
       center: 'title',
-      right: 'month,agendaWeek,agendaDay'
+      right: 'month,agendaWeek,basicWeek,agendaDay,basicDay'
     },
-    handleWindowResize: true, 
     firstDay: 1, 
     editable: true,    
     droppable: true, 
@@ -354,6 +358,9 @@ $(document).ready(function() {
     },
     eventDragStart: function( event, jsEvent, ui, view ) {
       _taskBeingDragged = { event : event, jsEvent : jsEvent };
+    },
+    viewRender: function( view, element ) {
+      setCookie("calview", $("#rtmcalendar").fullCalendar("getView").name);
     }
   };
   var gcalxml = getCookie("gcalxml");
@@ -362,7 +369,15 @@ $(document).ready(function() {
     $("#googlecalsettings").show();
     $("#googlecalendartogglebtn").prop("checked", true);    
   }
+  var view = getCookie("calview");
+  if (view){
+    calendarParameters.defaultView = view;
+  }
+
   $('#rtmcalendar').fullCalendar(calendarParameters);
+
+  $('.fc-button-basicDay')[0].innerHTML = "day list";
+  $('.fc-button-basicWeek')[0].innerHTML = "week list";
 
 
   //
