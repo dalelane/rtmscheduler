@@ -178,7 +178,10 @@ function createScheduledTask(listid, taskitem, instance){
     allDay          : instance.has_due_time === "0",
     rtmtaskseriesid : taskitem.id,
     rtmtaskid       : instance.id,
-    rtmlistid       : listid 
+    rtmlistid       : listid,
+    rtmtags         : taskitem.tags,
+    rtmtaskurl      : taskitem.url,
+    rtmtaskpriority : instance.priority 
   };
   $('#rtmcalendar').fullCalendar('renderEvent', eventObject, true);
 }
@@ -186,7 +189,7 @@ function createScheduledTask(listid, taskitem, instance){
 //
 // Create an object to represent an unscheduled task and add it to the list next to the calendar
 //
-function createUnscheduledTask(listid, taskitem){
+function createUnscheduledTask(listid, taskitem, instance){
   var rtmListItemObj = $("<div>", { 
     class: "unplannedtask",
     text : taskitem.name, 
@@ -194,7 +197,10 @@ function createUnscheduledTask(listid, taskitem){
           title           : taskitem.name, 
           rtmtaskid       : taskitem.task.id,
           rtmtaskseriesid : taskitem.id,
-          rtmlistid       : listid  } }
+          rtmlistid       : listid,
+          rtmtags         : taskitem.tags,
+          rtmtaskurl      : taskitem.url,
+          rtmtaskpriority : instance.priority  } }
   }).draggable({
     start:  function() { $(this).toggle(); }, 
     stop: function() { $(this).toggle(); }, 
@@ -206,13 +212,10 @@ function createUnscheduledTask(listid, taskitem){
     revertDuration: 0  //  original position after the drag
   }).click(function() {
     var listDiv = $(this);
-    $("#edittaskdialog").dialog({ 
-      width : 400, 
-      height: 110, 
-      title: taskitem.name 
-    }).data({ 
+    displayEditTask({ 
       calData: $(this).data().eventObject,
-      uiElement: listDiv
+      uiElement: listDiv,
+      uiType: "unscheduled"
     });
   });
 
@@ -244,11 +247,6 @@ function createTask(val){
     if (resp.rsp.stat === "ok") {
       $("#newtaskdialog").dialog("close");
       $("#newtasktext").val("");
-      // createUnscheduledTask( resp.rsp.list.id, {
-      //   id   : resp.rsp.list.taskseries.id,
-      //   name : resp.rsp.list.taskseries.name,
-      //   task : { id : resp.rsp.list.taskseries.task.id }
-      // });
       handleTaskData(resp.rsp.list.id, resp.rsp.list.taskseries, false);
     }
     else {
@@ -256,6 +254,75 @@ function createTask(val){
     }
   });    
 }
+
+function editTaskTitle(newtitle, data){
+  rtm.get('rtm.tasks.setName', {
+      timeline      : window.rtmtimeline, 
+      list_id       : data.calData.rtmlistid, 
+      taskseries_id : data.calData.rtmtaskseriesid, 
+      task_id       : data.calData.rtmtaskid,
+      name          : newtitle
+    },
+    function(resp){
+      if (resp.rsp.stat === "ok"){
+        data.calData.title = newtitle;
+        if (data.uiType === "scheduled"){
+          $('#rtmcalendar').fullCalendar('updateEvent', data.calData);
+        }
+        else if (data.uiType === "unscheduled"){
+          data.uiElement[0].innerHTML = newtitle;
+          $(data.uiElement[0]).data("eventObject", data.calData);
+        }
+      }
+      else {
+        alert("RTM API error");
+      }
+    }
+  );
+}
+function editTaskMetadata(datatype, newvalue, data){
+  var apiname = "";
+
+  var apipayload = {
+      timeline      : window.rtmtimeline, 
+      list_id       : data.calData.rtmlistid, 
+      taskseries_id : data.calData.rtmtaskseriesid, 
+      task_id       : data.calData.rtmtaskid
+  };
+  apipayload[datatype] = newvalue;
+
+  switch (datatype){
+    case "priority":
+      data.calData.rtmtaskpriority = newvalue;
+      apiname = "rtm.tasks.setPriority";
+      break;
+    case "url":
+      data.calData.rtmtaskurl = newvalue;
+      apiname = "rtm.tasks.setURL";
+      break;
+    case "tags":
+      data.calData.rtmtags = newvalue;
+      apiname = "rtm.tasks.setTags";
+      break;
+  }
+
+  rtm.get(apiname, apipayload, 
+    function(resp){
+      if (resp.rsp.stat === "ok"){
+        if (data.uiType === "scheduled"){
+          $('#rtmcalendar').fullCalendar('updateEvent', data.calData);
+        }
+        else if (data.uiType === "unscheduled"){
+          $(data.uiElement[0]).data("eventObject", data.calData);
+        }
+      }
+      else {
+        alert("RTM API error");
+      }
+    }
+  );  
+}
+
 
 //
 // Utility functions to handle variable response formats
@@ -275,11 +342,32 @@ function handleTask(listid, taskitem, instance, ignoreunscheduled){
     createScheduledTask(listid, taskitem, instance);
   }
   else if (!(ignoreunscheduled)){
-    createUnscheduledTask(listid, taskitem);
+    createUnscheduledTask(listid, taskitem, instance);
   }
 }
 
 
+//
+// displays and populates the dialog for editing RTM tasks
+// 
+function displayEditTask(dlgData){
+  $("#edittaskdialog").dialog({ width : 490, height: 235, title: dlgData.calData.title }).data(dlgData);
+  $("#edittasktext").val(dlgData.calData.title);
+  $("#edittasklist").val(dlgData.calData.rtmlistid);
+  $("#edittaskurl").val(dlgData.calData.rtmtaskurl);
+  $("#edittaskpriority").val(dlgData.calData.rtmtaskpriority);
+  $("#edittasktags").val(flattenTags(dlgData.calData.rtmtags));
+}
+
+function flattenTags(tagsObject){
+  if (!(tagsObject) || !(tagsObject.tag)){
+    return "";
+  }
+  if ($.isArray(tagsObject.tag) && tagsObject.tag.length > 0){
+    return tagsObject.tag.join(", ");
+  }  
+  return tagsObject.tag;
+}
 
 //
 // Remember The Milk Auth API functions
@@ -362,7 +450,29 @@ $(document).ready(function() {
   $('#deletetaskbtn').button().click(function(event){
     var data = $("#edittaskdialog").data();
     deleteTask(data.calData, data.uiElement);
-  });  
+  });
+  $('#edittaskbtn').button().click(function(event){
+    var data = $("#edittaskdialog").data();
+
+    // submit API requests for any fields which have changed
+
+    var newtitle = $("#edittasktext").val();
+    if (data.calData.title !== newtitle){
+      editTaskTitle(newtitle, data);
+    }
+    var newpriority = $('#edittaskpriority').val();
+    if (data.calData.rtmtaskpriority !== newpriority){
+      editTaskMetadata("priority", newpriority, data);
+    }
+    var newurl = $('#edittaskurl').val();
+    if (data.calData.rtmtaskurl !== newurl){
+      editTaskMetadata("url", newurl, data);
+    }
+    var newtags = $('#edittasktags').val();
+    if (flattenTags(data.calData.rtmtags) !== newtags){
+      editTaskMetadata("tags", newtags, data);
+    }
+  });
 
 
 
@@ -385,13 +495,15 @@ $(document).ready(function() {
                  _taskBeingDragged.event.rtmtaskseriesid === filterEvent.rtmtaskseriesid && 
                  _taskBeingDragged.event.rtmtaskid === filterEvent.rtmtaskid;
         });
-        
+
         // add the task to the unscheduled list
         createUnscheduledTask(_taskBeingDragged.event.rtmlistid, {
             id   : _taskBeingDragged.event.rtmtaskseriesid,
             name : _taskBeingDragged.event.title,
-            task : { id : _taskBeingDragged.event.rtmtaskid }
-        });
+            task : { id : _taskBeingDragged.event.rtmtaskid },
+            tags : _taskBeingDragged.event.rtmtags,
+            url  : _taskBeingDragged.event.rtmtaskurl
+        }, { priority : _taskBeingDragged.event.rtmtaskpriority });
       }
     }
   });
@@ -430,7 +542,11 @@ $(document).ready(function() {
       setCookie("calview", $("#rtmcalendar").fullCalendar("getView").name);
     },
     eventClick: function(calEvent, jsEvent, view) {
-      $("#edittaskdialog").dialog({ width : 400, height: 110, title: calEvent.title }).data({ calData: calEvent });
+      displayEditTask({ 
+        calData : calEvent,
+        uiElement: this,
+        uiType: "scheduled"         
+      });
     }
   };
   var gcalxml = getCookie("gcalxml");

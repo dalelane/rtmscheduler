@@ -66,7 +66,7 @@
                 <a href="https://github.com/dalelane/rtmscheduler/issues">Report issues</a> | 
                 <a href="http://dalelane.co.uk/">Dale Lane</a>
             </div>
-            <div style="float: right; width: 60%; text-align: right; margin-right: 15px;">
+            <div class="rtmapimessage">
                 <em>This product uses the Remember The Milk API but is not endorsed or certified by Remember The Milk.</em>
             </div>
         </div>            
@@ -81,6 +81,19 @@
         <div id="edittaskdialog" title="Control task">
             <button id="completetaskbtn">Mark complete</button>
             <button id="deletetaskbtn">Delete</button>
+            <div class="edittaskfields">
+                <input id="edittasktext" type="text" placeholder="Task description"/>
+                <select id="edittaskpriority">
+                    <option value="N"></option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                <input id="edittasklist" type="text" placeholder="List" style="display: none"/>
+                <input id="edittasktags" type="text" placeholder="Tags"/>
+                <input id="edittaskurl"  type="text" placeholder="URL"/>
+                <button id="edittaskbtn">Save changes</button>
+            </div>
         </div>        
 
         <!-- dialog shown if you click on the "About this tool" link -->
