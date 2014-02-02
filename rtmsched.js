@@ -122,18 +122,18 @@ function rescheduleTask (listid, taskseriesid, taskid, due, allDay, revertFunc){
 // 
 // Submit a request to complete an RTM task
 //
-function completeTask (task, taskui){
-  editAndRemoveTask(task, taskui, 'rtm.tasks.complete');
+function completeTask (task, taskui, taskuitype){
+  editAndRemoveTask(task, taskui, taskuitype, 'rtm.tasks.complete');
 }
 
 // 
 // Submit a request to delete an RTM task
 //
-function deleteTask (task, taskui){
-  editAndRemoveTask(task, taskui, 'rtm.tasks.delete');
+function deleteTask (task, taskui, taskuitype){
+  editAndRemoveTask(task, taskui, taskuitype, 'rtm.tasks.delete');
 }
 
-function editAndRemoveTask(task, taskui, apioperation) {
+function editAndRemoveTask(task, taskui, taskuitype, apioperation) {
   rtm.get(apioperation, {
     timeline      : window.rtmtimeline, 
     list_id       : task.rtmlistid, 
@@ -142,12 +142,12 @@ function editAndRemoveTask(task, taskui, apioperation) {
   },
   function(resp){
     if (resp.rsp.stat === "ok"){
-      if (taskui){
+      if (taskuitype === "unscheduled"){
         // remove the task from the unscheduled list
         $(taskui).draggable('destroy');
         $(taskui).remove();
       }
-      else {
+      else if (taskuitype === "scheduled") {
         // remove the task from the calendar
         $('#rtmcalendar').fullCalendar('removeEvents', function(filterEvent){
           return task.rtmlistid === filterEvent.rtmlistid && 
@@ -445,13 +445,15 @@ $(document).ready(function() {
   });
   $('#completetaskbtn').button().click(function(event){
     var data = $("#edittaskdialog").data();
-    completeTask(data.calData, data.uiElement);
+    completeTask(data.calData, data.uiElement, data.uiType);
   });
   $('#deletetaskbtn').button().click(function(event){
     var data = $("#edittaskdialog").data();
-    deleteTask(data.calData, data.uiElement);
+    deleteTask(data.calData, data.uiElement, data.uiType);
   });
   $('#edittaskbtn').button().click(function(event){
+    $('#edittaskbtn').button("disable");
+
     var data = $("#edittaskdialog").data();
 
     // submit API requests for any fields which have changed
@@ -472,6 +474,9 @@ $(document).ready(function() {
     if (flattenTags(data.calData.rtmtags) !== newtags){
       editTaskMetadata("tags", newtags, data);
     }
+
+    $('#edittaskbtn').button("enable");
+
   });
 
 
