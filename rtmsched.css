@@ -159,6 +159,13 @@ button#rtmauth {
 	z-index: 100;
 }
 
+.rtmapimessage {
+	float: right; 
+	width: 60%; 
+	text-align: right; 
+	margin-right: 15px;
+}
+
 #googlecalendardialog {
 	display: none;
 	text-align: left;
@@ -183,7 +190,16 @@ button#rtmauth {
 	display: none;
 }
 
-#completetaskbtn, #deletetaskbtn {
+.edittaskfields {
+	margin-top: 10px;
+}
+
+.edittaskfields > input, select {
+	width: 100%;
+	font-size: 12px;
+}
+
+#completetaskbtn, #deletetaskbtn, #edittaskbtn {
 	width: 45%;
 }
 
