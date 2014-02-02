@@ -547,11 +547,13 @@ $(document).ready(function() {
       setCookie("calview", $("#rtmcalendar").fullCalendar("getView").name);
     },
     eventClick: function(calEvent, jsEvent, view) {
-      displayEditTask({ 
-        calData : calEvent,
-        uiElement: this,
-        uiType: "scheduled"         
-      });
+      if (calEvent.rtmtaskid){
+        displayEditTask({ 
+          calData : calEvent,
+          uiElement: this,
+          uiType: "scheduled"         
+        });
+      }
     }
   };
   var gcalxml = getCookie("gcalxml");
