@@ -133,6 +133,10 @@ function deleteTask (task, taskui, taskuitype){
   editAndRemoveTask(task, taskui, taskuitype, 'rtm.tasks.delete');
 }
 
+//
+// Submit an API request to change a task state and remove it 
+//  from the UI (because it has been marked complete, or deleted)
+// 
 function editAndRemoveTask(task, taskui, taskuitype, apioperation) {
   rtm.get(apioperation, {
     timeline      : window.rtmtimeline, 
@@ -236,6 +240,28 @@ function createRtmTimeline(){
   });
 }
 
+// gets the known lists, for use in autocomplete
+function getRtmLists(){
+  rtm.get('rtm.lists.getList', function(resp){
+    if (resp.rsp.stat === "ok"){
+      window.rtmlists = [];
+      $.each(resp.rsp.lists.list, function(listindex, list){
+        if (list.archived === "0" && 
+          list.deleted  === "0" && 
+          list.smart    === "0")
+        {
+          window.rtmlists.push(list.name);
+        }        
+      });
+    }
+    else {
+      $('#rtmerror').show().html("RTM API error");
+    }
+  });
+}
+
+
+
 // Create a new RTM task
 function createTask(val){
   rtm.get('rtm.tasks.add', { 
@@ -255,6 +281,7 @@ function createTask(val){
   });    
 }
 
+// Submit an API request to change the task description
 function editTaskTitle(newtitle, data){
   rtm.get('rtm.tasks.setName', {
       timeline      : window.rtmtimeline, 
@@ -280,6 +307,8 @@ function editTaskTitle(newtitle, data){
     }
   );
 }
+
+// Submit an API request to change an attribute of the task
 function editTaskMetadata(datatype, newvalue, data){
   var apiname = "";
 
@@ -344,6 +373,21 @@ function handleTask(listid, taskitem, instance, ignoreunscheduled){
   else if (!(ignoreunscheduled)){
     createUnscheduledTask(listid, taskitem, instance);
   }
+
+  if (taskitem.tags.tag){
+    if ($.isArray(taskitem.tags.tag) && taskitem.tags.tag.length > 0){
+      $.each(taskitem.tags.tag, function(tagidx, tag){
+        if (window.rtmtags.indexOf(tag) === -1){
+          window.rtmtags.push(tag);
+        }
+      });
+    }  
+    else {
+      if (window.rtmtags.indexOf(taskitem.tags.tag) === -1){
+          window.rtmtags.push(taskitem.tags.tag);
+      }
+    }
+  }  
 }
 
 
@@ -359,6 +403,8 @@ function displayEditTask(dlgData){
   $("#edittasktags").val(flattenTags(dlgData.calData.rtmtags));
 }
 
+// RTM API returns tags in different forms based on whether there is none, one or several
+//   Handle all of these here, returning them in a single consistent form
 function flattenTags(tagsObject){
   if (!(tagsObject) || !(tagsObject.tag)){
     return "";
@@ -381,6 +427,7 @@ $(document).ready(function() {
       frob,
       permissions = 'delete';
 
+  window.rtmtags = [];
   window.rtm = new RememberTheMilk(api_key, api_secret, permissions);
 
   frob = getCookie("rtmfrob");
@@ -407,7 +454,8 @@ $(document).ready(function() {
 
     fetchUnscheduledRtmTasks();
     fetchScheduledRtmTasks();
-    createRtmTimeline();    
+    createRtmTimeline();
+    getRtmLists();
   }
   else {
     $('#rtmauth').click(function(){
@@ -429,6 +477,7 @@ $(document).ready(function() {
             fetchUnscheduledRtmTasks();
             fetchScheduledRtmTasks();
             createRtmTimeline();
+            getRtmLists();
           });
         }
       }, 200);
@@ -438,11 +487,7 @@ $(document).ready(function() {
   $( "#newtaskbtn" ).button().click(function(event){
     createTask($("#newtasktext").val());
   });
-  $('#newtasktext').keyup(function(event){
-    if (event.keyCode === 13){
-      createTask($("#newtasktext").val());
-    }
-  });
+
   $('#completetaskbtn').button().click(function(event){
     var data = $("#edittaskdialog").data();
     completeTask(data.calData, data.uiElement, data.uiType);
@@ -630,6 +675,13 @@ $(document).ready(function() {
       $("#newtasktext").focus();
   });
 
+
+  // 
+  // autocomplete text boxes
+  //
+  addAutocomplete("#newtasktext", "#", true);
+  addAutocomplete("#rtmquerytext", "list:", false);
+
   // 
   // Clear RTM credentials
   //
@@ -649,6 +701,68 @@ $(document).ready(function() {
   });
 
 });
+
+function addAutocomplete(textboxselector, listprefix, includetags){
+  $(textboxselector)
+    // don't navigate away from the field on tab when selecting an item
+    .bind( "keydown", function( event ) {
+      if ( event.keyCode === $.ui.keyCode.TAB &&
+        $( this ).data( "ui-autocomplete" ).menu.active ) {
+          event.preventDefault();
+        }
+    })
+    .autocomplete({
+      minLength : 0,
+      source    : function(req, resp){
+        var caretPos = $(textboxselector)[0].selectionStart;
+        var prevSpace = getCurrentTerm(req.term, caretPos, listprefix);
+        if (prevSpace >= 0){
+          var currentTerm = req.term.substring(prevSpace, caretPos);
+          resp($.ui.autocomplete.filter(includetags ? window.rtmlists.concat(window.rtmtags) : window.rtmlists, 
+                                        currentTerm));
+        }
+      },
+      focus     : function() { return false; },
+      select    : function(event, ui){
+        var caretPos = event.target.selectionStart;
+        var prevSpace = getCurrentTerm(event.target.value, caretPos, listprefix);
+        if (prevSpace >= 0){
+          var selectedValue = ui.item.value;
+          if (selectedValue.indexOf(" ") !== -1){
+            selectedValue = '"' + selectedValue + '"';
+          }
+          this.value = event.target.value.substring(0, prevSpace) + 
+                       selectedValue + 
+                       event.target.value.substring(caretPos);
+          event.target.selectionStart = prevSpace + selectedValue.length;
+          event.target.selectionEnd = prevSpace + selectedValue.length;
+        }
+        return false;
+      }
+    });
+}
+
+// Used for auto-complete text boxes, to identify the word that is 
+//   currently being edited in the text box (allowing for the fact
+//   that users can edit text from somewhere inside the text, not 
+//   necessarily at the end)
+function getCurrentTerm(completeString, caretPos, prefix){
+  var idx = completeString.indexOf(prefix);
+  var lastSpace = idx;
+  while (idx >= 0){
+    idx = completeString.indexOf(" " + prefix, idx + 1);
+    if (idx > -1 && idx < caretPos){
+      lastSpace = idx;
+    }
+  }
+  if (lastSpace >= 0){
+    return lastSpace + prefix.length;
+  } 
+  else {
+    return lastSpace;
+  }
+}
+
 
 // 
 // Cookie methods
