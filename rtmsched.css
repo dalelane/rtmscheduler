@@ -213,3 +213,7 @@ button#rtmauth {
 	margin: 10px;
 	font-size: 12px;
 }
+
+ul.ui-autocomplete {
+    z-index: 1100;
+}
