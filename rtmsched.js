@@ -245,14 +245,18 @@ function getRtmLists(){
   rtm.get('rtm.lists.getList', function(resp){
     if (resp.rsp.stat === "ok"){
       window.rtmlists = [];
+      var editListOptions = "";
       $.each(resp.rsp.lists.list, function(listindex, list){
         if (list.archived === "0" && 
-          list.deleted  === "0" && 
-          list.smart    === "0")
+            list.deleted  === "0" && 
+            list.smart    === "0")
         {
           window.rtmlists.push(list.name);
+
+          editListOptions += "<option value='" + list.id + "'>" + list.name + "</option>";
         }        
       });
+      $("#edittasklist").append(editListOptions);
     }
     else {
       $('#rtmerror').show().html("RTM API error");
@@ -283,73 +287,142 @@ function createTask(val){
 
 // Submit an API request to change the task description
 function editTaskTitle(newtitle, data){
-  rtm.get('rtm.tasks.setName', {
-      timeline      : window.rtmtimeline, 
-      list_id       : data.calData.rtmlistid, 
-      taskseries_id : data.calData.rtmtaskseriesid, 
-      task_id       : data.calData.rtmtaskid,
-      name          : newtitle
-    },
-    function(resp){
-      if (resp.rsp.stat === "ok"){
-        data.calData.title = newtitle;
-        if (data.uiType === "scheduled"){
-          $('#rtmcalendar').fullCalendar('updateEvent', data.calData);
+  var deferred = $.Deferred();
+
+  if (data.calData.title !== newtitle){
+    rtm.get('rtm.tasks.setName', {
+        timeline      : window.rtmtimeline, 
+        list_id       : data.calData.rtmlistid, 
+        taskseries_id : data.calData.rtmtaskseriesid, 
+        task_id       : data.calData.rtmtaskid,
+        name          : newtitle
+      },
+      function(resp){
+        if (resp.rsp.stat === "ok"){
+          data.calData.title = newtitle;
+          if (data.uiType === "scheduled"){
+            $('#rtmcalendar').fullCalendar('updateEvent', data.calData);
+          }
+          else if (data.uiType === "unscheduled"){
+            data.uiElement[0].innerHTML = newtitle;
+            $(data.uiElement[0]).data("eventObject", data.calData);
+          }
+
+          deferred.resolve();
         }
-        else if (data.uiType === "unscheduled"){
-          data.uiElement[0].innerHTML = newtitle;
-          $(data.uiElement[0]).data("eventObject", data.calData);
+        else {
+          alert("RTM API error");
+
+          deferred.reject();
         }
       }
-      else {
-        alert("RTM API error");
-      }
-    }
-  );
+    );
+  }
+  else {
+    deferred.resolve();
+  }
+  return deferred.promise();
 }
 
 // Submit an API request to change an attribute of the task
 function editTaskMetadata(datatype, newvalue, data){
-  var apiname = "";
+  var deferred = $.Deferred();
+  
+  if ((datatype === "priority" && data.calData.rtmtaskpriority === newvalue) ||
+      (datatype === "url" && data.calData.rtmtaskurl === newvalue) ||
+      (datatype === "tags" && flattenTags(data.calData.rtmtags) === newvalue))
+  {
+    deferred.resolve();
+  }
+  else {
+    var apiname = "";
 
-  var apipayload = {
-      timeline      : window.rtmtimeline, 
-      list_id       : data.calData.rtmlistid, 
-      taskseries_id : data.calData.rtmtaskseriesid, 
-      task_id       : data.calData.rtmtaskid
-  };
-  apipayload[datatype] = newvalue;
+    var apipayload = {
+        timeline      : window.rtmtimeline, 
+        list_id       : data.calData.rtmlistid, 
+        taskseries_id : data.calData.rtmtaskseriesid, 
+        task_id       : data.calData.rtmtaskid
+    };
+    apipayload[datatype] = newvalue;
 
-  switch (datatype){
-    case "priority":
-      data.calData.rtmtaskpriority = newvalue;
-      apiname = "rtm.tasks.setPriority";
-      break;
-    case "url":
-      data.calData.rtmtaskurl = newvalue;
-      apiname = "rtm.tasks.setURL";
-      break;
-    case "tags":
-      data.calData.rtmtags = newvalue;
-      apiname = "rtm.tasks.setTags";
-      break;
+    switch (datatype){
+      case "priority":
+        data.calData.rtmtaskpriority = newvalue;
+        apiname = "rtm.tasks.setPriority";
+        break;
+      case "url":
+        data.calData.rtmtaskurl = newvalue;
+        apiname = "rtm.tasks.setURL";
+        break;
+      case "tags":
+        data.calData.rtmtags = newvalue;
+        apiname = "rtm.tasks.setTags";
+        break;
+    }
+
+    rtm.get(apiname, apipayload, 
+      function(resp){
+        if (resp.rsp.stat === "ok"){
+          if (data.uiType === "scheduled"){
+            $('#rtmcalendar').fullCalendar('updateEvent', data.calData);
+          }
+          else if (data.uiType === "unscheduled"){
+            $(data.uiElement[0]).data("eventObject", data.calData);
+          }
+
+          deferred.resolve(); 
+        }
+        else {
+          alert("RTM API error");
+
+          deferred.reject();
+        }
+      }
+    );  
   }
 
-  rtm.get(apiname, apipayload, 
-    function(resp){
-      if (resp.rsp.stat === "ok"){
-        if (data.uiType === "scheduled"){
-          $('#rtmcalendar').fullCalendar('updateEvent', data.calData);
+  return deferred.promise();
+}
+
+// Submit an API request to move a task from one list to another
+function editTaskList(newlistid, data){
+  var deferred = $.Deferred();
+  
+  if (data.calData.rtmlistid !== newlistid){
+    var apipayload = {
+        timeline      : window.rtmtimeline, 
+        taskseries_id : data.calData.rtmtaskseriesid, 
+        task_id       : data.calData.rtmtaskid,      
+        from_list_id  : data.calData.rtmlistid, 
+        to_list_id    : newlistid
+    };
+
+    rtm.get("rtm.tasks.moveTo", apipayload, 
+      function(resp){
+        if (resp.rsp.stat === "ok"){
+          data.calData.rtmlistid = newlistid;
+          if (data.uiType === "scheduled"){
+            $('#rtmcalendar').fullCalendar('updateEvent', data.calData);
+          }
+          else if (data.uiType === "unscheduled"){
+            $(data.uiElement[0]).data("eventObject", data.calData);
+          }
+
+          deferred.resolve();
         }
-        else if (data.uiType === "unscheduled"){
-          $(data.uiElement[0]).data("eventObject", data.calData);
+        else {
+          alert("RTM API error");
+
+          deferred.reject();
         }
       }
-      else {
-        alert("RTM API error");
-      }
-    }
-  );  
+    );  
+  }
+  else {
+    deferred.resolve();
+  }
+
+  return deferred.promise();
 }
 
 
@@ -395,7 +468,7 @@ function handleTask(listid, taskitem, instance, ignoreunscheduled){
 // displays and populates the dialog for editing RTM tasks
 // 
 function displayEditTask(dlgData){
-  $("#edittaskdialog").dialog({ width : 490, height: 235, title: dlgData.calData.title }).data(dlgData);
+  $("#edittaskdialog").dialog({ width : 490, height: 260, title: dlgData.calData.title }).data(dlgData);
   $("#edittasktext").val(dlgData.calData.title);
   $("#edittasklist").val(dlgData.calData.rtmlistid);
   $("#edittaskurl").val(dlgData.calData.rtmtaskurl);
@@ -501,27 +574,30 @@ $(document).ready(function() {
 
     var data = $("#edittaskdialog").data();
 
+
     // submit API requests for any fields which have changed
+    //  chaining the requests rather than submitting them all
+    //  at once to avoid hitting RTM rate limits
 
     var newtitle = $("#edittasktext").val();
-    if (data.calData.title !== newtitle){
-      editTaskTitle(newtitle, data);
-    }
     var newpriority = $('#edittaskpriority').val();
-    if (data.calData.rtmtaskpriority !== newpriority){
-      editTaskMetadata("priority", newpriority, data);
-    }
     var newurl = $('#edittaskurl').val();
-    if (data.calData.rtmtaskurl !== newurl){
-      editTaskMetadata("url", newurl, data);
-    }
     var newtags = $('#edittasktags').val();
-    if (flattenTags(data.calData.rtmtags) !== newtags){
-      editTaskMetadata("tags", newtags, data);
-    }
+    var newlist = $('#edittasklist').val();
 
-    $('#edittaskbtn').button("enable");
+    editTaskList(newlist, data)
+      .pipe(function() { return editTaskTitle(newtitle, data); })
+      .pipe(function() { return editTaskMetadata("priority", newpriority, data); })
+      .pipe(function() { return editTaskMetadata("url",      newurl,      data); })
+      .pipe(function() { return editTaskMetadata("tags",     newtags,     data); })
+      .done(function() 
+      {
+        $('#edittaskbtn').button("enable");
 
+        $("#edittaskdialog")
+          .dialog('close')
+          .removeData();
+      });
   });
 
 
