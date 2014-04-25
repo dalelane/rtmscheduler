@@ -178,7 +178,7 @@ function editAndRemoveTask(task, taskui, taskuitype, apioperation) {
 function createScheduledTask(listid, taskitem, instance){
   var eventObject = {
     title           : taskitem.name, 
-    start           : instance.due, 
+    start           : new Date(instance.due), 
     allDay          : instance.has_due_time === "0",
     rtmtaskseriesid : taskitem.id,
     rtmtaskid       : instance.id,
